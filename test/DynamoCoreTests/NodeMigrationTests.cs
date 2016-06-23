@@ -2045,6 +2045,8 @@ namespace Dynamo.Tests
             string logPath = @"C:\Users\t_laksr\Downloads\Rat\migrationTest\migLog.txt";
             string errorLogPath = @"C:\Users\t_laksr\Downloads\Rat\migrationTest\migErrorLog.txt";
             // OpenModel(GetDynPath("LibraryTestPythonScript.dyn"));
+            //List<System.String> fileList = new List<System.String>();
+            //fileList.Add(@"C:\Users\t_laksr\Desktop\DynamoSrc\Dynamo\test\pkgs\multiple_locations\folder1\packages\Custom Rounding\dyf\CustomCeiling.dyf");
 
             foreach (var filePath in fileList)
             {
@@ -2067,7 +2069,7 @@ namespace Dynamo.Tests
                             Version fileVersion = new Version(ver.Major, ver.Minor, ver.Build, 0);
                             if (fileVersion < new System.Version(0, 7, 1, 0))
                             {
-                                //CurrentDynamoModel.CurrentWorkspace.Save(CurrentDynamoModel.EngineController.LiveRunnerRuntimeCore);
+                                CurrentDynamoModel.CurrentWorkspace.Save(CurrentDynamoModel.EngineController.LiveRunnerRuntimeCore);
                                 string text = File.ReadAllText(logPath);
                                 File.WriteAllText(logPath, string.Empty);
                                 File.WriteAllText(logPath, text + "\n" + filePath);
