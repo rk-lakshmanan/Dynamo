@@ -9,6 +9,9 @@ using CoreNodeModels.Logic;
 using Dynamo.Graph.Nodes;
 using Dynamo.Graph.Nodes.ZeroTouch;
 using PythonNodeModels;
+using Dynamo.Graph.Workspaces;
+using System;
+using Dynamo.Models;
 
 namespace Dynamo.Tests
 {
@@ -2013,13 +2016,78 @@ namespace Dynamo.Tests
             StringAssert.Contains("Model", workspace.NodeFromWorkspace<DSFunction>(
                 "fdea006e-b127-4280-a407-4058b78b93a3").NickName);
         }
+        private List<System.String> DirSearch(string sDir)
+        {
+            List<System.String> files = new List<System.String>();
+            try
+            {
+                foreach (string f in System.IO.Directory.GetFiles(sDir))
+                {
+                    files.Add(f);
+                }
+                foreach (string d in System.IO.Directory.GetDirectories(sDir))
+                {
+                    files.AddRange(DirSearch(d));
+                }
+            }
+            catch (System.Exception excpt)
+            {
+                
+            }
 
+            return files;
+        }
         [Test]
         public void LibraryTestPythonScript()
         {
-            OpenModel(GetDynPath("LibraryTestPythonScript.dyn"));
-            var workspace = CurrentDynamoModel.CurrentWorkspace;
+            List<System.String> fileList =  DirSearch(TestDirectory);
+            //string rpath = GetDynPath("LibraryTestPythonScript.dyn");
+            string logPath = @"C:\Users\t_laksr\Downloads\Rat\migrationTest\migLog.txt";
+            string errorLogPath = @"C:\Users\t_laksr\Downloads\Rat\migrationTest\migErrorLog.txt";
+            // OpenModel(GetDynPath("LibraryTestPythonScript.dyn"));
 
+            foreach (var filePath in fileList)
+            {
+                try
+                {
+                    string fileExt = Path.GetExtension(filePath);
+                    if (fileExt.Equals(".dyn") || fileExt.Equals(".dyf"))
+                    {
+                        var workspace = CurrentDynamoModel.CurrentWorkspace;
+                        XmlDocument doc = new XmlDocument();
+                        CurrentDynamoModel.ExecuteCommand(new DynamoModel.OpenFileCommand(filePath));
+                        doc.Load(filePath);
+                        WorkspaceInfo info = new WorkspaceInfo();
+                        if (WorkspaceInfo.FromXmlDocument(doc, filePath, false, false, CurrentDynamoModel.Logger, out info))
+                        {
+                            Version ver = string.IsNullOrEmpty(info.Version) ?
+                           new Version(0, 0, 0, 0) : new Version(info.Version);
+
+                            // Ignore revision number.
+                            Version fileVersion = new Version(ver.Major, ver.Minor, ver.Build, 0);
+                            if (fileVersion < new System.Version(0, 7, 1, 0))
+                            {
+                                //CurrentDynamoModel.CurrentWorkspace.Save(CurrentDynamoModel.EngineController.LiveRunnerRuntimeCore);
+                                string text = File.ReadAllText(logPath);
+                                File.WriteAllText(logPath, string.Empty);
+                                File.WriteAllText(logPath, text + "\n" + filePath);
+
+                            }
+
+                        }
+
+                    } 
+                    
+                }catch(Exception ex)
+                {
+                    string text = File.ReadAllText(errorLogPath);
+                    File.WriteAllText(errorLogPath, string.Empty);
+                    File.WriteAllText(errorLogPath, text + "\n\n" + filePath+"\n"+ex.Message);
+                }
+               
+
+            }
+/*
             // check that all nodes and connectors are loaded
             Assert.AreEqual(5, workspace.Nodes.Count());
             Assert.AreEqual(6, workspace.Connectors.Count());
@@ -2030,6 +2098,7 @@ namespace Dynamo.Tests
             // check that the node is migrated to a PythonNode which retains the old script
             StringAssert.Contains("OUT = OUT", workspace.NodeFromWorkspace<PythonNode>(
                 "caef9f81-c9a6-47aa-92c9-dc3b8fd6f7d7").Script);
+                */
         }
 
         [Test]
