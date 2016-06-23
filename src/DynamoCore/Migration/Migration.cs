@@ -575,6 +575,10 @@ namespace Dynamo.Migration
             {
                 return Decision.Migrate;
             }
+            else if(fileVersion <= new Version(0, 6, 3, 0))
+            {
+                return Decision.Abort;
+            }
 
             // For end-users, disable migration.
             if (fileVersion < currVersion)
